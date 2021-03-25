@@ -1,31 +1,40 @@
 package sensorval;
 
 import java.util.List;
+import java.util.function.Predicate;
 
-public class SensorValidator 
+public class SensorValidator
 {
-    public static boolean _give_me_a_good_name(double value, double nextValue, double maxDelta) {
-        if(nextValue - value > maxDelta) {
-            return false;
-        }
-        return true;
+  private static final double MAX_SOC_DELTA = 0.05;
+  private static final double MAX_CURRENT_DELTA = 0.1;
+
+  public static final Predicate<List<Double>> IS_VALID_VALUES = values -> values != null && !values.isEmpty() && !values.contains(null);
+
+  public static boolean valuesHaveNoSuddenJumps(final double value, final double nextValue, final double maxDelta)
+  {
+    return nextValue - value > maxDelta;
+  }
+
+  public static boolean validateReadings(final List<Double> values, final double maxDeltaValue)
+  {
+    for (int i = 0; i < values.size() - 1; i++)
+    {
+      if (valuesHaveNoSuddenJumps(values.get(i), values.get(i + 1), maxDeltaValue))
+      {
+        return false;
+      }
     }
-    public static boolean validateSOCreadings(List<Double> values) {
-        int lastButOneIndex = values.size() - 1;
-        for(int i = 0; i < lastButOneIndex; i++) {
-            if(!_give_me_a_good_name(values.get(i), values.get(i + 1), 0.05)) {
-            return false;
-            }
-        }
-        return true;
-    }
-    public static boolean validateCurrentreadings(List<Double> values) {
-        int lastButOneIndex = values.size() - 1;
-        for(int i = 0; i < lastButOneIndex; i++) {
-            if(!_give_me_a_good_name(values.get(i), values.get(i + 1), 0.1)) {
-            return false;
-            }
-        }
-        return true;
-    }
+    return true;
+  }
+
+  public static boolean validateSOCReadings(final List<Double> socValues)
+  {
+    return IS_VALID_VALUES.test(socValues) && validateReadings(socValues, MAX_SOC_DELTA);
+  }
+
+  public static boolean validateCurrentReadings(final List<Double> currentValues)
+  {
+    return IS_VALID_VALUES.test(currentValues) && validateReadings(currentValues, MAX_CURRENT_DELTA);
+  }
+
 }
